@@ -22,6 +22,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency 'http'
   spec.add_dependency 'nokogiri'
+  spec.add_dependency 'rainbow'
 
   spec.add_development_dependency 'bundler', '~> 1.13'
 end

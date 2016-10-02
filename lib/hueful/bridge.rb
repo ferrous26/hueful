@@ -127,6 +127,13 @@ class Hueful::Bridge
     Hueful.parse_json resp.body
   end
 
+  # @return [Hash]
+  def light index, token
+    resp = @connection.get "/api/#{token}/lights/#{index}"
+    handle_http_error resp
+    Hueful.parse_json resp.body
+  end
+
 
   # @!group Misc.
 
