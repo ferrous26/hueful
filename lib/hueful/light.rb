@@ -20,6 +20,10 @@ class Hueful::Light
 
   attr_reader :name
 
+  def name= new_name
+    @name = @client.bridge.light_rename @client.token, @index, new_name
+  end
+
   attr_reader :on
   alias_method :on?, :on
   # @!group State Management

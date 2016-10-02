@@ -134,6 +134,22 @@ class Hueful::Bridge
     Hueful.parse_json resp.body
   end
 
+  # @return [String]
+  def light_rename token, index, new_name
+    body = { name: new_name }
+    resp = @connection.put "/api/#{token}/lights/#{index}", body: body.to_json
+    handle_http_error resp
+
+    result = Hueful.parse_json resp.body.first
+    if (name = result[:success])
+      name["/lights/#{index}/name"]
+
+    elsif (error = result[:error])
+      raise Error.new(error)
+
+    end
+  end
+
 
   # @!group Misc.
 
