@@ -21,29 +21,45 @@ class Hueful::Light
   attr_reader :name
 
   def name= new_name
-    @name = @client.bridge.light_rename @client.token, @index, new_name
+    @name = @client.rename_light self, new_name
   end
 
   attr_reader :on
   alias_method :on?, :on
+
+  def turn_on
+    @client.turn_on_light self
+  end
+
+  def turn_off
+    @client.turn_off_light self
+  end
+
+  def toggle
+    @on ? turn_off : turn_on
+  end
+
+  attr_reader :reachable
+  alias_method :reachable?, :reachable
+
+
   # @!group State Management
 
+  def update_state updates
+    updates.each_pair do |key, value|
+      instance_variable_set "@#{key}", value
+    end
+    self
+  end
+
   def refresh
-    json = @client.bridge.light @client.token, @index
+    json = @client.refresh_light self
     unpack_description json
     self
   end
 
   def inspect
     "#<Hueful::Light #{@name} #{state_string}>"
-  end
-
-  def method_missing meth, *args
-    if (value = @json[meth])
-      value
-    else
-      super
-    end
   end
 
 
@@ -58,7 +74,7 @@ class Hueful::Light
   end
 
   def state_string
-    on? ? COLOUR.wrap('ON').green : COLOUR.wrap('OFF').red
+    @on ? COLOUR.wrap('ON').green : COLOUR.wrap('OFF').red
   end
 
 end

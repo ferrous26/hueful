@@ -128,26 +128,30 @@ class Hueful::Bridge
   end
 
   # @return [Hash]
-  def light index, token
+  def light token, index
     resp = @connection.get "/api/#{token}/lights/#{index}"
     handle_http_error resp
-    Hueful.parse_json resp.body
+    Hueful.parse_json(resp.body)
   end
 
   # @return [String]
   def light_rename token, index, new_name
     body = { name: new_name }
     resp = @connection.put "/api/#{token}/lights/#{index}", body: body.to_json
-    handle_http_error resp
+    parse_json_response(resp).values.first
+  end
 
-    result = Hueful.parse_json resp.body.first
-    if (name = result[:success])
-      name["/lights/#{index}/name"]
+  # @return [Hash]
+  def light_update token, index, updates = {}
+    resp = @connection.put "/api/#{token}/lights/#{index}/state",
+                           body: updates.to_json
 
-    elsif (error = result[:error])
-      raise Error.new(error)
+    results = parse_json_response(resp).map { |key, value|
+      key = key.to_s.split('/').last.to_sym
+      [key, value]
+    }
 
-    end
+    Hash[results]
   end
 
 
@@ -163,6 +167,20 @@ class Hueful::Bridge
   def handle_http_error response
     return if response.status.code == 200
     raise RuntimeError, response.status.inspect
+  end
+
+  def parse_json_response response
+    handle_http_error response
+
+    results = Hueful.parse_json(response.body).map do |r|
+      if (attr = r[:success])
+        attr.first
+      else
+        raise Error.new(r)
+      end
+    end
+
+    Hash[results]
   end
 
   def unpack_description

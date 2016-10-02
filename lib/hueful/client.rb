@@ -31,12 +31,31 @@ class Hueful::Client
   end
 
 
-  # @!group API
+  # @!group Light API
 
   def lights
-    @bridge.lights(@token).map { |json|
-      Hueful::Light.new json, self
-    }
+    @bridge.lights(@token).map { |json| Hueful::Light.new(json, self) }
+  end
+
+  def refresh_light light
+    @bridge.light @token, light.index
+  end
+
+  def rename_light light, new_name
+    @bridge.light_rename @token, light.index, new_name
+  end
+
+  def update_light light, updates = {}
+    result = @bridge.light_update @token, light.index, updates
+    light.update_state result
+  end
+
+  def turn_on_light light
+    update_light light, on: true
+  end
+
+  def turn_off_light light
+    update_light light, on: false
   end
 
 end
