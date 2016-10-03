@@ -1,67 +1,40 @@
 require 'hueful/version'
 require 'hueful/client'
+require 'hueful/discovery'
 require 'hueful/light'
 
 require 'json'
 require 'nokogiri'
 
 
+##
+# Bridge is a proxy for a Philips hue bridge.
+#
+# This class exposes (most of) the API provided by the hue bridge in an
+# object oriented manner. Exceptions will be raised in the case of errors.
+#
+# Bridges are instantiated following the API guidelines, either by one of
+# the discovery methods or by loading cached configuration from a file.
 class Hueful::Bridge
 
-  class << self
+  # @return [Array<Hueful::Bridge>]
+  def self.discover method: :nupnp
+    ip_addrs = case method
+               when :cached      then Discovery.cached
+               when :ssdp, :upnp then Discovery.ssdp
+               when :nupnp       then Discovery.nupnp
+               else
+                 raise ArgumentError, "`#{method}' is not a discovery method"
+               end
 
-    # @return [Array<Hueful::Bridge>]
-    def discover method: :nupnp
-      case method
-      when :cached      then discover_cached
-      when :ssdp, :upnp then discover_ssdp
-      when :nupnp       then discover_nupnp
-      else
-        raise ArgumentError, "`#{method}' is not a valid discovery method"
-      end
-    end
+    ip_addrs.map { |ip| new(ip) }
+  end
 
-    def discover_ssdp timeout: 5
-      require 'ssdp'
 
-      consumer = SSDP::Consumer.new service: 'ssdp:all',
-                                    synchronous: true,
-                                    timeout: timeout
 
-      bridges = {}
-      consumer.search.each { |service|
-        if (id = service[:params]['hue-bridgeid'])
-          bridges[id] = service[:address]
-        end
-      }
-
-      bridges.values.map { |ip| new ip }
-
-    rescue LoadError
-      raise 'You need to install the ssdp gem first'
-    end
-
-    def discover_nupnp
-      resp = HTTP.get('https://www.meethue.com/api/nupnp')
-
-      case resp.status.code
-      when 200
-        Hueful.parse_json(resp.body).map { |service|
-          new service[:internalipaddress]
-        }
-      else
-        raise RuntimeError, resp.status.inspect
-      end
-    end
-
-    def discover_cached path = Hueful.default_config_path
-      config  = Hueful.parse_json File.read path
-      ip_addr = config[:last_ip_address]
-      [new(ip_addr)]
     end
 
   end
-
 
   class Error < Exception
 
