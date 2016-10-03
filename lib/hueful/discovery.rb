@@ -1,4 +1,7 @@
+# frozen_string_literal: true
+
 require 'hueful/version'
+
 
 class Hueful::Bridge
 

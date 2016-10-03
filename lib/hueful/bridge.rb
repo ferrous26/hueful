@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'hueful/version'
 require 'hueful/client'
 require 'hueful/discovery'
