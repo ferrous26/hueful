@@ -3,6 +3,7 @@
 require 'hueful/version'
 require 'hueful/client'
 require 'hueful/discovery'
+require 'hueful/errors'
 require 'hueful/light'
 
 require 'json'
@@ -30,25 +31,6 @@ class Hueful::Bridge
                end
 
     ip_addrs.map { |ip| new(ip) }
-  end
-
-
-
-    end
-
-  end
-
-  class Error < Exception
-
-    attr_reader :type
-    attr_reader :address
-
-    def initialize error_obj
-      @type, @address, message =
-        error_obj.values_at 'type', 'address', 'description'
-      super message
-    end
-
   end
 
   attr_reader :ip_address
